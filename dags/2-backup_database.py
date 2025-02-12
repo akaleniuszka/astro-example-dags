@@ -17,7 +17,7 @@ db_password = db_credentials["password"]
 db_host = db_credentials["host"]
 db_name = db_credentials["dbname"]
 s3_bucket = Variable.get("s3_bucket")
-backup_path = "./backup/backup.sql"
+backup_path = "..\\backup\\backup.sql"
 
 # Define the DAG
 with DAG(
