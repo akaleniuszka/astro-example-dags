@@ -16,6 +16,7 @@ db_user = db_credentials["user"]
 db_password = db_credentials["password"]
 db_host = db_credentials["host"]
 db_name = db_credentials["dbname"]
+db_port = db_credentials["port"]
 s3_bucket = Variable.get("s3_bucket")
 backup_path = "..\\backup\\backup.sql"
 
@@ -32,7 +33,7 @@ with DAG(
     # Task to back up the database
     backup_db = BashOperator(
         task_id='backup_db',
-        bash_command=f'PGPASSWORD={db_password} pg_dump -U {db_user} -h {db_host} {db_name} > {backup_path}'
+        bash_command=f'PGPASSWORD={db_password} pg_dump -U {db_user} -h {db_host} -p {db_port} {db_name} > {backup_path}'
     )
 
     # Task to upload the backup to S3
