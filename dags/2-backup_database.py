@@ -44,7 +44,7 @@ def exportar_base_datos(**kwargs):
                 INNER JOIN public.film_category
                 ON film.film_id = film_category.film_id
                 INNER JOIN public.category
-                ON film_category.category_id = category.category_id;
+                ON film_category.category_id = category.category_id
             ) 
         TO 
             STDOUT 
