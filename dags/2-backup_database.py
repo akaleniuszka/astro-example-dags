@@ -68,10 +68,12 @@ def exportar_base_datos(**kwargs):
 
     azurehook = WasbHook(wasb_conn_id='azure_storage')
 
+    timestamp = datetime.now()
+
     azurehook.load_string(
         string_data=open('rental.csv').read(),
         container_name='backup',
-        blob_name='rental.csv'
+        blob_name='rental_' + str(timestamp) + '.csv'
     )
 
     print("Se ha subido el archivo CSV a un contenedor de almacenamiento de Azure")
