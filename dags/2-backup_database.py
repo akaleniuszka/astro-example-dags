@@ -57,7 +57,7 @@ def exportar_base_datos(**kwargs):
     print("Se va a ejecutar el siguiente query: ", copy_to_csv_query)
 
     # Execute the query
-    with open('/../backup/rental.csv', 'w') as f:
+    with open('../backup/rental.csv', 'w') as f:
         cursor.copy_expert(
             copy_to_csv_query, 
             f
