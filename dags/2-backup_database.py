@@ -73,7 +73,7 @@ def exportar_base_datos(**kwargs):
     azurehook.load_string(
         string_data=open('rental.csv').read(),
         container_name='backup',
-        blob_name='rental_' + str(timestamp) + '.csv'
+        blob_name='rental_' + timestamp + '.csv'
     )
 
     print("Se ha subido el archivo CSV a un contenedor de almacenamiento de Azure")
