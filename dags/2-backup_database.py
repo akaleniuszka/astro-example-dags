@@ -1,11 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.hooks.postgres_hook import PostgresHook
-from airflow.models import Variable
-from airflow.utils.dates import days_ago
-import json
 
 # Define default arguments
 default_args = {
