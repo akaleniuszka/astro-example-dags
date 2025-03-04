@@ -3,6 +3,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 
 # Define default arguments
 default_args = {
@@ -62,6 +63,18 @@ def exportar_base_datos(**kwargs):
         cursor.close()
 
     print("Se ha exportado la base de datos correctamente")
+
+    print("Se va a subir el archivo CSV a un contenedor de almacenamiento de Azure")
+
+    azurehook = WasbHook(wasb_conn_id='azure_storage')
+
+    azurehook.load_string(
+        string_data=open('rental.csv').read(),
+        container_name='backup',
+        blob_name='rental.csv'
+    )
+
+    print("Se ha subido el archivo CSV a un contenedor de almacenamiento de Azure")
     
     return
 
