@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import Variable
 from airflow.utils.dates import days_ago
 import json
@@ -10,37 +13,85 @@ default_args = {
     'retries': 1,
 }
 
-# Fetch and parse the DB_CREDENTIALS variable
-db_credentials = json.loads(Variable.get("DB_CREDENTIALS"))
-db_user = db_credentials["user"]
-db_password = db_credentials["password"]
-db_host = db_credentials["host"]
-db_name = db_credentials["dbname"]
-db_port = db_credentials["port"]
-s3_bucket = Variable.get("s3_bucket")
-backup_path = "..\\backup\\prueba.sql"
+def exportar_base_datos(**kwargs):
+    # Get connection to the database
+    pg_hook = PostgresHook(postgres_conn_id=kwargs['postgres_conn_id'])
+    # Get the connection to the database
+    conn = pg_hook.get_conn()
+    # Get the cursor
+    cursor = conn.cursor()
 
-# Define the DAG
-with DAG(
-    'database_backup',
+    # Get the table name
+    copy_to_csv_query = """
+        COPY 
+            (
+                SELECT
+                    customer.first_name,
+                    customer.last_name,
+                    film.title,
+                    category.name AS category_name,
+                    payment.amount,
+                    payment.payment_date
+                FROM public.rental
+                INNER JOIN public.payment
+                    ON rental.rental_id = payment.rental_id
+                INNER JOIN public.customer
+                    ON rental.customer_id = customer.customer_id
+                INNER JOIN public.inventory
+                ON rental.inventory_id = inventory.inventory_id
+                INNER JOIN public.film
+                ON inventory.film_id = film.film_id
+                INNER JOIN public.film_category
+                ON film.film_id = film_category.film_id
+                INNER JOIN public.category
+                ON film_category.category_id = category.category_id;
+            ) 
+        TO 
+            STDOUT 
+        WITH 
+            CSV
+            DELIMITER ',' 
+            HEADER
+    """
+
+    print("Se va a ejecutar el siguiente query: ", copy_to_csv_query)
+
+    # Execute the query
+    with open('/../backup/rental.csv', 'w') as f:
+        cursor.copy_expert(
+            copy_to_csv_query, 
+            f
+        )
+        cursor.close()
+
+    print("Se ha exportado la base de datos correctamente")
+    
+    return
+
+dag1 = DAG(
+    dag_id='2-backup_database',
     default_args=default_args,
-    description='Backup automatico de base de datos',
+    description='Copia de la base de datos a un archivo CSV',
     schedule_interval='@daily',
-    start_date=days_ago(1),
-    catchup=False,
-) as dag:
+    start_date=datetime(2021, 1, 1),
+    tags=['backup', 'database', 'csv', 'postgres'],
+)
 
-    # Task to back up the database
-    backup_db = BashOperator(
-        task_id='backup_db',
-        bash_command=f'PGPASSWORD={db_password} pg_dump -U {db_user} -h {db_host} -p {db_port} {db_name} > {backup_path}'
-    )
+start = DummyOperator(
+    task_id='start',
+    dag=dag1
+)
 
-    # Task to upload the backup to S3
-    upload_to_s3 = BashOperator(
-        task_id='upload_to_s3',
-        bash_command=f'aws s3 cp {backup_path} s3://{s3_bucket}/backup.sql'
-    )
+end = DummyOperator(
+    task_id='end',
+    dag=dag1
+)
 
-    # Define task dependencies
-    backup_db >> upload_to_s3
+exportar_base_datos_task = PythonOperator(
+    task_id='exportar_base_datos',
+    python_callable=exportar_base_datos,
+    op_kwargs={'postgres_conn_id': 'Aiven_DB_Conn'},
+    dag=dag1
+)
+
+start >> exportar_base_datos_task >> end
