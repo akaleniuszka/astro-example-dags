@@ -68,7 +68,7 @@ def exportar_base_datos(**kwargs):
 
     azurehook = WasbHook(wasb_conn_id='azure_storage')
 
-    timestamp = datetime.now()
+    timestamp = datetime.now().strftime('%Y-%m-%d')
 
     azurehook.load_string(
         string_data=open('rental.csv').read(),
