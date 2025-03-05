@@ -99,14 +99,14 @@ transform_data = BashOperator(
 )
 
 move_extracted_to_azure_container_task = PythonOperator(
-    task_id = 'move_to_azure_container',
+    task_id = 'move_extract_to_azure_container',
     python_callable = move_to_azure_container,
     op_kwargs={'file': '/usr/local/airflow/dags/final/staging/extracted_data.csv'},
     dag = dag,
 )
 
 move_transformed_to_azure_container = PythonOperator(
-    task_id = 'move_to_azure_container',
+    task_id = 'move_transform_to_azure_container',
     python_callable = move_to_azure_container,
     op_kwargs={'file': '/usr/local/airflow/dags/final/staging/transformed_data.csv'},
     dag = dag,
