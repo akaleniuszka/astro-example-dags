@@ -30,7 +30,7 @@ dag = DAG(
 
 unzip_data = BashOperator(
     task_id = 'unzip_data',
-    bash_command = 'tar -zxvf final/tolldata.tgz -C final',
+    bash_command = 'tar -zxvf /usr/local/airflow/dags/final/tolldata.tgz -C /usr/local/airflow/dags/final',
     dag = dag,
 )
 
@@ -38,7 +38,7 @@ unzip_data = BashOperator(
 
 extract_data_from_csv = BashOperator(
     task_id = 'extract_data_from_csv',
-    bash_command = 'cut -d"," -f1-4 final/vehicle-data.csv > final/staging/csv_data.csv',
+    bash_command = 'cut -d"," -f1-4 /usr/local/airflow/dags/final/vehicle-data.csv > /usr/local/airflow/dags/final/staging/csv_data.csv',
     dag = dag,
 )
 
@@ -46,7 +46,7 @@ extract_data_from_csv = BashOperator(
 
 extract_data_from_tsv = BashOperator(
     task_id = 'extract_data_from_tsv',
-    bash_command = 'cut -d" " -f5-7 final/tollplaza-data.tsv | tr -d "\r" | tr "[:blank:]" "," > final/staging/tsv_data.csv',
+    bash_command = 'cut -d" " -f5-7 /usr/local/airflow/dags/final/tollplaza-data.tsv | tr -d "\r" | tr "[:blank:]" "," > /usr/local/airflow/dags/final/staging/tsv_data.csv',
     dag = dag,
 )
 
@@ -54,7 +54,7 @@ extract_data_from_tsv = BashOperator(
 
 extract_data_from_fixed_width = BashOperator(
     task_id = 'extract_data_from_fixed_width',
-    bash_command = 'cut -b59-67 <final/payment-data.txt | tr " " ","> final/staging/fixed_width_data.csv',
+    bash_command = 'cut -b59-67 </usr/local/airflow/dags/final/payment-data.txt | tr " " ","> /usr/local/airflow/dags/final/staging/fixed_width_data.csv',
     dag = dag,
 )
 
@@ -62,7 +62,7 @@ extract_data_from_fixed_width = BashOperator(
 
 consolidate_data = BashOperator(
     task_id = 'consolidate_data',
-    bash_command = 'paste final/staging/csv_data.csv final/staging/tsv_data.csv final/staging/fixed_width_data.csv > final/staging/extracted_data.csv',
+    bash_command = 'paste /usr/local/airflow/dags/final/staging/csv_data.csv final/staging/tsv_data.csv final/staging/fixed_width_data.csv > /usr/local/airflow/dags/final/staging/extracted_data.csv',
     dag = dag,
 )
 
@@ -70,7 +70,7 @@ consolidate_data = BashOperator(
 
 transform_data = BashOperator(
     task_id = 'transform_data',
-    bash_command = 'cut -d "," -f4 final/staging/extracted_data.csv | tr "[a-z]" "[A-Z]" > final/staging/transformed_data.csv',
+    bash_command = 'cut -d "," -f4 /usr/local/airflow/dags/final/staging/extracted_data.csv | tr "[a-z]" "[A-Z]" > /usr/local/airflow/dags/final/staging/transformed_data.csv',
     dag = dag,
 )
 
