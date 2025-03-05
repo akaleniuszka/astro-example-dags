@@ -1,5 +1,5 @@
 # Import libraries
-from datetime import timedelta
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python import PythonOperator
@@ -23,7 +23,7 @@ def move_to_azure_container(**kwargs):
     print("Moviendo el archivo "+kwargs['file']+" a Azure container")
     # Create a WasbHook object
     wasb_hook = WasbHook(wasb_conn_id='azure_storage')
-    timestamp = timedelta.now().strftime('%Y-%m-%d')
+    timestamp = datetime.now().strftime('%Y-%m-%d')
     if 'extracted' in kwargs['file']:
         blobfilename = f"extracted_data_{timestamp}.csv"
     else:
