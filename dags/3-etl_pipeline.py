@@ -47,6 +47,7 @@ dag = DAG(
     schedule_interval = timedelta(days=1),
     default_args = default_args,
     description = 'Apache Airflow ETL pipeline to extract, transform and load toll data',
+    tags=['azure', 'etl', 'toll', 'data'],
 )
 
 # Task definitions
