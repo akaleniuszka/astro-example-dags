@@ -30,8 +30,8 @@ def move_to_azure_container(**kwargs):
         blobfilename = f"transformed_data_{timestamp}.csv"
     
     # Upload the file to the container
-    wasb_hook.load_file(
-        filename=kwargs['file'],
+    wasb_hook.load_string(
+        string_data=open(kwargs['file']).read(),
         container_name='backup',
         blob_name=blobfilename
     )
