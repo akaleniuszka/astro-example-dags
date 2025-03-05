@@ -2,6 +2,8 @@
 from datetime import timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 from airflow.utils.dates import days_ago
 
 # DAG arguments
@@ -15,6 +17,28 @@ default_args = {
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
 }
+
+# Define function to move the data to Azure container
+def move_to_azure_container(**kwargs):
+    print("Moviendo el archivo "+kwargs['file']+" a Azure container")
+    # Create a WasbHook object
+    wasb_hook = WasbHook(wasb_conn_id='azure_storage')
+    timestamp = timedelta.now().strftime('%Y-%m-%d')
+    if 'extracted' in kwargs['file']:
+        blobfilename = f"extracted_data_{timestamp}.csv"
+    else:
+        blobfilename = f"transformed_data_{timestamp}.csv"
+    
+    # Upload the file to the container
+    wasb_hook.load_file(
+        filename=kwargs['file'],
+        container_name='backup',
+        blob_name=blobfilename
+    )
+
+    print("Se ha subido el archivo "+kwargs['file']+" a Azure container")
+
+    return
 
 # DAG definition
 
@@ -74,6 +98,20 @@ transform_data = BashOperator(
     dag = dag,
 )
 
+move_extracted_to_azure_container_task = PythonOperator(
+    task_id = 'move_to_azure_container',
+    python_callable = move_to_azure_container,
+    op_kwargs={'file': '/usr/local/airflow/dags/final/staging/extracted_data.csv'},
+    dag = dag,
+)
+
+move_transformed_to_azure_container = PythonOperator(
+    task_id = 'move_to_azure_container',
+    python_callable = move_to_azure_container,
+    op_kwargs={'file': '/usr/local/airflow/dags/final/staging/transformed_data.csv'},
+    dag = dag,
+)
+
 ## Define the task pipeline
 
-unzip_data >> extract_data_from_csv >> extract_data_from_tsv >> extract_data_from_fixed_width >> consolidate_data >> transform_data
+unzip_data >> extract_data_from_csv >> extract_data_from_tsv >> extract_data_from_fixed_width >> consolidate_data >> move_extracted_to_azure_container_task >> transform_data >> move_transformed_to_azure_container
